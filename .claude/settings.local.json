@@ -9,7 +9,8 @@
       "Bash(forge init:*)",
       "Bash(forge install:*)",
       "Bash(ls:*)",
-      "Bash(forge:*)"
+      "Bash(forge:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
