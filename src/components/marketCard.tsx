@@ -109,23 +109,27 @@ export function MarketCard({ index, filter }: MarketCardProps) {
     }
 
     return (
-        <Card key={index} className="flex flex-col">
+        <Card key={index} className="flex flex-col h-full hover:shadow-md transition-shadow duration-200">
             {isLoadingMarketData ? (
                 <MarketCardSkeleton />
             ) : (
                 <>
-                    <CardHeader>
+                    <CardHeader className="pb-3">
                         {market && <MarketTime endTime={market.endTime} />}
-                        <CardTitle>{market?.question}</CardTitle>
+                        <CardTitle className="text-base sm:text-lg leading-tight min-h-[2.5rem] flex items-center">
+                            {market?.question}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-grow pb-3">
                         {market && (
-                            <MarketProgress 
-                                optionA={market.optionA}
-                                optionB={market.optionB}
-                                totalOptionAShares={market.totalOptionAShares}
-                                totalOptionBShares={market.totalOptionBShares}
-                            />
+                            <div className="mb-4">
+                                <MarketProgress 
+                                    optionA={market.optionA}
+                                    optionB={market.optionB}
+                                    totalOptionAShares={market.totalOptionAShares}
+                                    totalOptionBShares={market.totalOptionBShares}
+                                />
+                            </div>
                         )}
                         {new Date(Number(market?.endTime) * 1000) < new Date() ? (
                             market?.resolved ? (
@@ -153,7 +157,7 @@ export function MarketCard({ index, filter }: MarketCardProps) {
                             />
                         )}
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="pt-3 border-t bg-muted/5 dark:bg-muted/10">
                         {market && sharesBalance && (
                             <MarketSharesDisplay 
                                 market={market}

@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { OwnerInfo } from "./owner-info";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Navbar() {
   const { address: account } = useAccount();
@@ -95,7 +96,7 @@ export function Navbar() {
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">
         🔮 Prediction Market
       </h1>
       <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -122,6 +123,7 @@ export function Navbar() {
             )}
           </Button>
         )}
+        <ThemeToggle />
         <div className="flex-shrink-0">
           <ConnectButton
             chainStatus="icon"

@@ -29,28 +29,45 @@ export function EnhancedPredictionMarketDashboard() {
     <div className="min-h-screen flex flex-col">
       <div className="flex-grow container mx-auto px-4 py-2 sm:p-4">
         <Navbar />
-        <div className="mb-4 sm:mb-6 relative h-[120px] sm:h-[180px] md:h-[300px] lg:h-[400px]">
+        <div className="mb-4 sm:mb-6 relative h-[160px] sm:h-[200px] md:h-[300px] lg:h-[400px] overflow-hidden">
           <Image
             src="https://images.unsplash.com/photo-1570304815928-ef0771059599?q=80&w=2531&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             alt="Prediction Market Banner"
             fill
             priority
             className="object-cover rounded-lg"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-            <h1 className="text-white text-2xl sm:text-4xl md:text-5xl font-bold text-center px-4">
-              Prediction Market
-            </h1>
+          <div className="absolute inset-0 bg-black/30 dark:bg-black/50 rounded-lg flex items-center justify-center p-4">
+            <div className="text-center">
+              <h1 className="text-primary-foreground text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
+                Prediction Market
+              </h1>
+              <p className="text-primary-foreground/90 text-sm sm:text-base md:text-lg font-medium hidden sm:block">
+                Trade on future events with confidence
+              </p>
+            </div>
           </div>
         </div>
         <DebugInfo />
         <TokenBalance />
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-12 sm:h-10">
-            <TabsTrigger value="active" className="text-xs sm:text-sm">Active</TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs sm:text-sm">Pending</TabsTrigger>
-            <TabsTrigger value="resolved" className="text-xs sm:text-sm">Resolved</TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center mb-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-muted/30 p-1">
+              <TabsTrigger value="active" className="text-sm font-semibold px-4 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-lg transition-all duration-200">
+                <span className="hidden sm:inline">Active Markets</span>
+                <span className="sm:hidden">Active</span>
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="text-sm font-semibold px-4 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-lg transition-all duration-200">
+                <span className="hidden sm:inline">Pending</span>
+                <span className="sm:hidden">Pending</span>
+              </TabsTrigger>
+              <TabsTrigger value="resolved" className="text-sm font-semibold px-4 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-lg transition-all duration-200">
+                <span className="hidden sm:inline">Resolved</span>
+                <span className="sm:hidden">Resolved</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {isLoadingMarketCount ? (
             <TabsContent value="active" className="mt-4 sm:mt-6">
@@ -60,24 +77,24 @@ export function EnhancedPredictionMarketDashboard() {
             </TabsContent>
           ) : (
             <>
-              <TabsContent value="active">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <TabsContent value="active" className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                   {Array.from({ length: Number(marketCount) }, (_, index) => (
                     <MarketCard key={index} index={index} filter="active" />
                   ))}
                 </div>
               </TabsContent>
 
-              <TabsContent value="pending">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <TabsContent value="pending" className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                   {Array.from({ length: Number(marketCount) }, (_, index) => (
                     <MarketCard key={index} index={index} filter="pending" />
                   ))}
                 </div>
               </TabsContent>
 
-              <TabsContent value="resolved">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <TabsContent value="resolved" className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                   {Array.from({ length: Number(marketCount) }, (_, index) => (
                     <MarketCard key={index} index={index} filter="resolved" />
                   ))}

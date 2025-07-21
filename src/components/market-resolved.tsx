@@ -98,7 +98,7 @@ export function MarketResolved({
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="mb-2 bg-green-200 p-2 rounded-md text-center text-xs">
+            <div className="mb-2 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 p-2 rounded-md text-center text-xs border border-green-200 dark:border-green-500/50">
                 Resolved: {outcome === 0 ? optionA : optionB}
             </div>
             <Button 

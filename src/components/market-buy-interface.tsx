@@ -269,7 +269,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                     <div className="flex flex-col mb-4">
                         {buyingStep === 'allowance' ? (
                             // Approval step
-                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-3 sm:p-4">
+                            <div className="flex flex-col border-2 border-border rounded-lg p-3 sm:p-4">
                                 <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Approval Needed</h2>
                                 <p className="text-sm sm:text-base mb-3 sm:mb-4">You need to approve the transaction before proceeding.</p>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
@@ -302,7 +302,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                             </div>
                         ) : buyingStep === 'confirm' ? (
                             // Confirmation step
-                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-3 sm:p-4">
+                            <div className="flex flex-col border-2 border-border rounded-lg p-3 sm:p-4">
                                 <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Confirm Transaction</h2>
                                 <p className="text-sm sm:text-base mb-3 sm:mb-4">
                                     You are about to buy <span className="font-bold">
@@ -340,7 +340,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                         ) : (
                             // Amount input step
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-500 mb-2">
+                                <span className="text-xs text-muted-foreground mb-2">
                                     {`1 ${selectedOption === 'A' ? market.optionA : market.optionB} = 1 PREDICT`}
                                 </span>
                                 <div className="flex flex-col gap-2 mb-4">
@@ -364,7 +364,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                                 }}
                                                 className={cn(
                                                     "w-full text-sm sm:text-base",
-                                                    error && "border-red-500 focus-visible:ring-red-500"
+                                                    error && "border-destructive focus-visible:ring-destructive"
                                                 )}
                                             />
                                         </div>
@@ -374,7 +374,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                     </div>
                                     <div className="min-h-[20px]">
                                         {error && (
-                                            <span className="text-xs sm:text-sm text-red-500">
+                                            <span className="text-xs sm:text-sm text-destructive">
                                                 {error}
                                             </span>
                                         )}

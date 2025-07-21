@@ -137,7 +137,7 @@ export function MarketOwnerResolve({ marketId, market }: MarketOwnerResolveProps
                     disabled={resolvingOutcome !== null || isWaitingForReceipt}
                     variant="outline"
                     size="sm"
-                    className="flex-1 border-green-300 hover:bg-green-50"
+                    className="flex-1 border-green-500/50 hover:bg-green-500/10 hover:border-green-500/70 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
                 >
                     {resolvingOutcome === 0 || (resolvingOutcome === null && isWaitingForReceipt) ? (
                         <>
@@ -156,7 +156,7 @@ export function MarketOwnerResolve({ marketId, market }: MarketOwnerResolveProps
                     disabled={resolvingOutcome !== null || isWaitingForReceipt}
                     variant="outline"
                     size="sm"
-                    className="flex-1 border-red-300 hover:bg-red-50"
+                    className="flex-1 border-red-500/50 hover:bg-red-500/10 hover:border-red-500/70 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                 >
                     {resolvingOutcome === 1 || (resolvingOutcome === null && isWaitingForReceipt) ? (
                         <>

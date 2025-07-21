@@ -21,10 +21,10 @@ export function TokenBalance() {
   const formattedBalance = parseFloat(formatEther(balance)).toFixed(2);
 
   return (
-    <div className="text-sm text-gray-600 mb-4">
-      Your PREDICT balance: <span className="font-semibold">{formattedBalance}</span>
+    <div className="text-sm text-muted-foreground mb-4">
+      Your PREDICT balance: <span className="font-semibold text-foreground">{formattedBalance}</span>
       {parseFloat(formattedBalance) === 0 && (
-        <span className="text-red-500 ml-2">
+        <span className="text-destructive ml-2">
           (You need tokens to trade! Click "Get Tokens")
         </span>
       )}
