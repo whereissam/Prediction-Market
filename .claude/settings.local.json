@@ -6,7 +6,10 @@
       "Bash(mkdir:*)",
       "Bash(npm run build:*)",
       "Bash(rm:*)",
-      "Bash(forge init:*)"
+      "Bash(forge init:*)",
+      "Bash(forge install:*)",
+      "Bash(ls:*)",
+      "Bash(forge:*)"
     ],
     "deny": []
   }
