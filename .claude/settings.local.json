@@ -10,7 +10,16 @@
       "Bash(forge install:*)",
       "Bash(ls:*)",
       "Bash(forge:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(npm run dev:*)",
+      "Bash(grep:*)",
+      "Bash(cast call:*)",
+      "Bash(pkill:*)",
+      "Bash(cast tx:*)",
+      "Bash(cast code:*)",
+      "Bash(cast balance:*)",
+      "Bash(cast send:*)"
     ],
     "deny": []
   }

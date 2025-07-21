@@ -1,5 +1,5 @@
 import { Badge } from "./ui/badge";
-import { toEther } from "thirdweb";
+import { formatEther } from "viem";
 import { useEffect, useState } from "react";
 import { toFixed } from "@/lib/utils";
 
@@ -58,13 +58,13 @@ export function MarketSharesDisplay({
         }
     }, [sharesBalance, market.totalOptionAShares, market.totalOptionBShares]);
 
-    const displayWinningsA = toFixed(Number(toEther(winnings.A)), 2);
-    const displayWinningsB = toFixed(Number(toEther(winnings.B)), 2);
+    const displayWinningsA = toFixed(Number(formatEther(winnings.A)), 2);
+    const displayWinningsB = toFixed(Number(formatEther(winnings.B)), 2);
 
     return (
         <div className="flex flex-col gap-2">
             <div className="w-full text-sm text-muted-foreground">
-                Your shares: {market.optionA} - {Math.floor(parseInt(toEther(sharesBalance?.optionAShares)))}, {market.optionB} - {Math.floor(parseInt(toEther(sharesBalance?.optionBShares)))}
+                Your shares: {market.optionA} - {Math.floor(parseInt(formatEther(sharesBalance?.optionAShares)))}, {market.optionB} - {Math.floor(parseInt(formatEther(sharesBalance?.optionBShares)))}
             </div>
             {(winnings.A > 0 || winnings.B > 0) && (
                 <div className="flex flex-col gap-1">

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { useActiveAccount, useReadContract } from "thirdweb/react";
-import { contract } from "@/constants/contract";
+import { useAccount, useReadContract } from "wagmi";
+import { PREDICTION_MARKET_ADDRESS } from "@/lib/wagmi";
+import { PREDICTION_MARKET_ABI } from "@/lib/contracts";
 import { MarketProgress } from "./market-progress";
 import { MarketTime } from "./market-time";
 import { MarketCardSkeleton } from "./market-card-skeleton";
@@ -37,13 +38,14 @@ interface SharesBalance {
 
 export function MarketCard({ index, filter }: MarketCardProps) {
     // Get the active account
-    const account = useActiveAccount();
+    const { address: account } = useAccount();
 
     // Get the market data
     const { data: marketData, isLoading: isLoadingMarketData } = useReadContract({
-        contract,
-        method: "function getMarketInfo(uint256 _marketId) view returns (string question, string optionA, string optionB, uint256 endTime, uint8 outcome, uint256 totalOptionAShares, uint256 totalOptionBShares, bool resolved)",
-        params: [BigInt(index)]
+        address: PREDICTION_MARKET_ADDRESS,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getMarketInfo",
+        args: [BigInt(index)],
     });
 
     // Parse the market data
@@ -60,9 +62,13 @@ export function MarketCard({ index, filter }: MarketCardProps) {
 
     // Get the shares balance
     const { data: sharesBalanceData } = useReadContract({
-        contract,
-        method: "function getSharesBalance(uint256 _marketId, address _user) view returns (uint256 optionAShares, uint256 optionBShares)",
-        params: [BigInt(index), account?.address as string]
+        address: PREDICTION_MARKET_ADDRESS,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getSharesBalance",
+        args: [BigInt(index), account as `0x${string}`],
+        query: {
+            enabled: !!account,
+        },
     });
 
     // Parse the shares balance

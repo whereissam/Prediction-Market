@@ -22,13 +22,13 @@ A decentralized prediction market built with Next.js, TypeScript, and Solidity s
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Radix UI** - Accessible component primitives  
-- **Thirdweb** - Web3 development toolkit
+- **RainbowKit + Wagmi** - Modern Web3 connection toolkit
 - **Lucide React** - Beautiful icons
 
 ### Smart Contracts
-- **Solidity 0.8.19** - Smart contract language
+- **Solidity 0.8.20** - Smart contract language
 - **OpenZeppelin** - Secure contract libraries
-- **Hardhat** - Development environment
+- **Foundry** - Development and deployment toolkit
 
 ### Blockchain
 - **Base Sepolia** - Ethereum L2 testnet
@@ -61,10 +61,10 @@ npm install --legacy-peer-deps
 Create a `.env.local` file:
 
 ```env
-# Thirdweb Configuration
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id_here
+# RainbowKit Configuration (Required)
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id_here
 
-# Backend Configuration for Token Claiming  
+# Backend Configuration for Token Claiming (Optional - only if you want the claim tokens feature)
 BACKEND_WALLET_ADDRESS=your_backend_wallet_address_here
 ENGINE_URL=https://your-engine-url.com
 THIRDWEB_SECRET_KEY=your_thirdweb_secret_key_here
@@ -78,60 +78,87 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) to see your application.
 
-## 📋 Smart Contract Deployment
+## 🎯 Backend Requirements (Optional)
 
-### 1. Install Contract Dependencies
+The prediction market works fully **without a backend**! Users can:
+- Connect their wallets using RainbowKit
+- Buy/sell prediction market shares directly on-chain
+- Claim rewards from resolved markets
+
+### Token Claiming Feature (Optional)
+
+The "Claim Tokens" button in the navbar requires a backend API endpoint. If you want this feature:
+
+1. **Keep the backend configuration** in `.env.local`
+2. **Implement the API endpoint** at `src/app/api/claimToken/route.ts`
+3. **Set up Thirdweb Engine** for gasless token distribution
+
+If you **don't need the claim tokens feature**:
+
+1. **Remove the backend configuration** from `.env.local`  
+2. **Remove the claim button** from `src/components/navbar.tsx`
+3. Users can get tokens through other means (DEX, manual distribution, etc.)
+
+## 📋 Smart Contract Deployment (Foundry)
+
+### 1. Install Foundry
 
 ```bash
-cd contracts
-npm install
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 ```
 
-### 2. Configure Network
+### 2. Configure Environment
 
 Create `contracts/.env`:
 
 ```env
-PRIVATE_KEY=your_wallet_private_key
+PRIVATE_KEY=your_wallet_private_key_without_0x_prefix
 BASESCAN_API_KEY=your_basescan_api_key_for_verification
 ```
 
 ### 3. Compile Contracts
 
 ```bash
-npm run compile
+cd contracts
+forge build
 ```
 
 ### 4. Deploy to Base Sepolia
 
 ```bash
-npm run deploy
+# Deploy contracts
+forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast --verify
+
+# Or using environment variable
+forge script script/Deploy.s.sol --rpc-url base_sepolia --broadcast --verify
 ```
 
 ### 5. Update Frontend Configuration
 
-After deployment, update `src/constants/contract.ts` with your deployed contract addresses:
+After deployment, update `src/lib/wagmi.ts` with your deployed contract addresses:
 
 ```typescript
-export const contractAddress = "0xYourDeployedMarketAddress";
-export const tokenAddress = "0xYourDeployedTokenAddress";
+export const PREDICTION_MARKET_ADDRESS = "0xYourDeployedMarketAddress" as const;
+export const PREDICT_TOKEN_ADDRESS = "0xYourDeployedTokenAddress" as const;
 ```
 
 ## 🔧 Configuration
 
-### Thirdweb Setup
+### RainbowKit Setup
 
-1. Visit [Thirdweb Dashboard](https://thirdweb.com/dashboard)
+1. Visit [WalletConnect Cloud](https://cloud.walletconnect.com)
 2. Create a new project
-3. Get your Client ID from the API Keys section
-4. Set up Engine for gasless transactions (optional)
+3. Get your Project ID from the dashboard
+4. Add it to your environment variables as `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`
 
 ### Wallet Configuration
 
-The app supports multiple wallet options:
+The app supports multiple wallet options through RainbowKit:
 
-- **In-App Wallets**: Google, Telegram, Email, X login
-- **External Wallets**: MetaMask, Coinbase, Rainbow, Rabby, Zerion
+- **Popular Wallets**: MetaMask, Coinbase Wallet, Rainbow, WalletConnect
+- **Hardware Wallets**: Ledger, Trezor
+- **Mobile Wallets**: Trust Wallet, Argent, and many more
 
 ### Contract Addresses
 
@@ -243,7 +270,7 @@ npm run dev
 
 ```bash
 cd contracts
-npx hardhat test
+forge test
 ```
 
 ### Testnet Testing
@@ -279,7 +306,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Thirdweb](https://thirdweb.com) - Web3 development toolkit
+- [RainbowKit](https://rainbowkit.com) - Web3 wallet connection
+- [Wagmi](https://wagmi.sh) - React hooks for Ethereum
 - [Base](https://base.org) - Ethereum L2 platform  
 - [OpenZeppelin](https://openzeppelin.com) - Secure smart contracts
 - [Radix UI](https://radix-ui.com) - Accessible components

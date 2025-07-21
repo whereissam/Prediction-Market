@@ -1,7 +1,10 @@
 import { Button } from "./ui/button";
-import { prepareContractCall } from "thirdweb";
-import { useSendAndConfirmTransaction } from "thirdweb/react";
-import { contract } from "@/constants/contract";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { PREDICTION_MARKET_ADDRESS } from "@/lib/wagmi";
+import { PREDICTION_MARKET_ABI } from "@/lib/contracts";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface MarketResolvedProps {
     marketId: number;
@@ -16,19 +19,37 @@ export function MarketResolved({
     optionA, 
     optionB
 }: MarketResolvedProps) {
-    const { mutateAsync: mutateTransaction } = useSendAndConfirmTransaction();
+    const [isClaiming, setIsClaiming] = useState(false);
+    const { writeContract, data: hash } = useWriteContract();
+    const { isLoading: isConfirming } = useWaitForTransactionReceipt({ 
+        hash 
+    });
+    const { toast } = useToast();
 
     const handleClaimRewards = async () => {
+        setIsClaiming(true);
         try {
-            const tx = await prepareContractCall({
-                contract,
-                method: "function claimWinnings(uint256 _marketId)",
-                params: [BigInt(marketId)]
+            writeContract({
+                address: PREDICTION_MARKET_ADDRESS,
+                abi: PREDICTION_MARKET_ABI,
+                functionName: "claimRewards",
+                args: [BigInt(marketId)],
             });
-
-            await mutateTransaction(tx);
+            
+            toast({
+                title: "Claiming Rewards!",
+                description: "Your transaction has been submitted",
+                duration: 5000,
+            });
         } catch (error) {
             console.error(error);
+            toast({
+                title: "Claim Failed",
+                description: "There was an error claiming your rewards",
+                variant: "destructive",
+            });
+        } finally {
+            setIsClaiming(false);
         }
     };
 
@@ -41,8 +62,16 @@ export function MarketResolved({
                 variant="outline" 
                 className="w-full" 
                 onClick={handleClaimRewards}
+                disabled={isClaiming || isConfirming}
             >
-                Claim Rewards
+                {isClaiming || isConfirming ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isConfirming ? "Confirming..." : "Claiming..."}
+                    </>
+                ) : (
+                    "Claim Rewards"
+                )}
             </Button>
         </div>
     );

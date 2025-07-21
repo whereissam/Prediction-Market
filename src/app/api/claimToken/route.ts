@@ -36,7 +36,13 @@ export async function POST(request: Request) {
     !ENGINE_URL ||
     !THIRDWEB_SECRET_KEY
   ) {
-    throw 'Server misconfigured. Did you forget to add a ".env.local" file?';
+    return NextResponse.json(
+      { 
+        message: "Server misconfigured. Missing environment variables.", 
+        error: "Please configure BACKEND_WALLET_ADDRESS, ENGINE_URL, and THIRDWEB_SECRET_KEY in your .env.local file" 
+      }, 
+      { status: 500 }
+    );
   }
 
   const { address } = await request.json();

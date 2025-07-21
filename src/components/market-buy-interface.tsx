@@ -1,10 +1,10 @@
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState, useRef, useEffect } from "react";
-import { useActiveAccount, useSendAndConfirmTransaction } from "thirdweb/react";
-import { prepareContractCall, readContract, toWei } from "thirdweb";
-import { contract, tokenContract } from "@/constants/contract";
-import { approve } from "thirdweb/extensions/erc20";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseEther, formatEther } from "viem";
+import { PREDICTION_MARKET_ADDRESS, PREDICT_TOKEN_ADDRESS } from "@/lib/wagmi";
+import { PREDICTION_MARKET_ABI, ERC20_ABI } from "@/lib/contracts";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast"
@@ -25,8 +25,8 @@ type Option = 'A' | 'B' | null;
 
 export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps) {
     // Blockchain interactions
-    const account = useActiveAccount();
-    const { mutateAsync: mutateTransaction } = useSendAndConfirmTransaction();
+    const { address: account } = useAccount();
+    const { writeContract } = useWriteContract();
     const { toast } = useToast()
 
     // UI state management
@@ -76,6 +76,17 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
         }, 200);
     };
 
+    // Get user's token allowance
+    const { data: userAllowance } = useReadContract({
+        address: PREDICT_TOKEN_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [account as `0x${string}`, PREDICTION_MARKET_ADDRESS],
+        query: {
+            enabled: !!account,
+        },
+    });
+
     // Check if user needs to approve token spending
     const checkApproval = async () => {
         if (amount <= 0) {
@@ -85,13 +96,8 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
         setError(null);
 
         try {
-            const userAllowance = await readContract({
-                contract: tokenContract,
-                method: "function allowance(address owner, address spender) view returns (uint256)",
-                params: [account?.address as string, contract.address]
-            });
-
-            setBuyingStep(userAllowance < BigInt(toWei(amount.toString())) ? 'allowance' : 'confirm');
+            const amountWei = parseEther(amount.toString());
+            setBuyingStep((userAllowance || BigInt(0)) < amountWei ? 'allowance' : 'confirm');
         } catch (error) {
             console.error(error);
         }
@@ -100,16 +106,30 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
     // Handle token approval transaction
     const handleSetApproval = async () => {
         setIsApproving(true);
+        setError(null);
         try {
-            const tx = await approve({
-                contract: tokenContract,
-                spender: contract.address,
-                amount: amount
+            writeContract({
+                address: PREDICT_TOKEN_ADDRESS,
+                abi: ERC20_ABI,
+                functionName: "approve",
+                args: [PREDICTION_MARKET_ADDRESS, parseEther(amount.toString())],
             });
-            await mutateTransaction(tx);
+            
+            toast({
+                title: "Approval Submitted",
+                description: "Please confirm the transaction in your wallet",
+                duration: 3000,
+            });
+            
             setBuyingStep('confirm');
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            setError(error?.message || "Approval failed");
+            toast({
+                title: "Approval Failed",
+                description: error?.message || "There was an error with the approval",
+                variant: "destructive",
+            });
         } finally {
             setIsApproving(false);
         }
@@ -123,30 +143,30 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
         }
 
         setIsConfirming(true);
+        setError(null);
         try {
-            const tx = await prepareContractCall({
-                contract,
-                method: "function buyShares(uint256 _marketId, bool _isOptionA, uint256 _amount)",
-                params: [BigInt(marketId), selectedOption === 'A', BigInt(toWei(amount.toString()))]
+            writeContract({
+                address: PREDICTION_MARKET_ADDRESS,
+                abi: PREDICTION_MARKET_ABI,
+                functionName: "buyShares",
+                args: [BigInt(marketId), selectedOption === 'A', parseEther(amount.toString())],
             });
-            await mutateTransaction(tx);
             
-            // Show success toast
             toast({
-                title: "Purchase Successful!",
-                description: `You bought ${amount} ${selectedOption === 'A' ? market.optionA : market.optionB} shares`,
-                duration: 5000, // 5 seconds
-            })
+                title: "Purchase Submitted",
+                description: "Please confirm the transaction in your wallet",
+                duration: 3000,
+            });
             
             handleCancel();
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            // Optionally show error toast
+            setError(error?.message || "Purchase failed");
             toast({
                 title: "Purchase Failed",
-                description: "There was an error processing your purchase",
+                description: error?.message || "There was an error processing your purchase",
                 variant: "destructive",
-            })
+            });
         } finally {
             setIsConfirming(false);
         }
@@ -167,22 +187,22 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
             >
                 {!isBuying ? (
                     // Initial option selection buttons
-                    <div className="flex justify-between gap-4 mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mb-4">
                         <Button 
-                            className="flex-1" 
+                            className="flex-1 min-h-[2.5rem] text-sm font-medium" 
                             onClick={() => handleBuy('A')}
                             aria-label={`Vote ${market.optionA} for "${market.question}"`}
                             disabled={!account}
                         >
-                            {market.optionA}
+                            <span className="truncate">{market.optionA}</span>
                         </Button>
                         <Button 
-                            className="flex-1"
+                            className="flex-1 min-h-[2.5rem] text-sm font-medium"
                             onClick={() => handleBuy('B')}
                             aria-label={`Vote ${market.optionB} for "${market.question}"`}
                             disabled={!account}
                         >
-                            {market.optionB}
+                            <span className="truncate">{market.optionB}</span>
                         </Button>
                     </div>
                 ) : (
@@ -190,19 +210,21 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                     <div className="flex flex-col mb-4">
                         {buyingStep === 'allowance' ? (
                             // Approval step
-                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-4">
-                                <h2 className="text-lg font-bold mb-4">Approval Needed</h2>
-                                <p className="mb-4">You need to approve the transaction before proceeding.</p>
-                                <div className="flex justify-end">
+                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-3 sm:p-4">
+                                <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Approval Needed</h2>
+                                <p className="text-sm sm:text-base mb-3 sm:mb-4">You need to approve the transaction before proceeding.</p>
+                                <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                                     <Button 
                                         onClick={handleSetApproval} 
-                                        className="mb-2"
+                                        className="order-2 sm:order-1"
+                                        size="sm"
                                         disabled={isApproving}
                                     >
                                         {isApproving ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Approving...
+                                                <span className="hidden xs:inline">Approving...</span>
+                                                <span className="xs:hidden">...</span>
                                             </>
                                         ) : (
                                             'Set Approval'
@@ -210,8 +232,9 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                     </Button>
                                     <Button 
                                         onClick={handleCancel} 
-                                        className="ml-2" 
+                                        className="order-1 sm:order-2" 
                                         variant="outline"
+                                        size="sm"
                                         disabled={isApproving}
                                     >
                                         Cancel
@@ -220,23 +243,25 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                             </div>
                         ) : buyingStep === 'confirm' ? (
                             // Confirmation step
-                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-4">
-                                <h2 className="text-lg font-bold mb-4">Confirm Transaction</h2>
-                                <p className="mb-4">
+                            <div className="flex flex-col border-2 border-gray-200 rounded-lg p-3 sm:p-4">
+                                <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Confirm Transaction</h2>
+                                <p className="text-sm sm:text-base mb-3 sm:mb-4">
                                     You are about to buy <span className="font-bold">
                                         {amount} {selectedOption === 'A' ? market.optionA : market.optionB}
                                     </span> share(s).
                                 </p>
-                                <div className="flex justify-end">
+                                <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                                     <Button 
                                         onClick={handleConfirm} 
-                                        className="mb-2"
+                                        className="order-2 sm:order-1"
+                                        size="sm"
                                         disabled={isConfirming}
                                     >
                                         {isConfirming ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Confirming...
+                                                <span className="hidden xs:inline">Confirming...</span>
+                                                <span className="xs:hidden">...</span>
                                             </>
                                         ) : (
                                             'Confirm'
@@ -244,8 +269,9 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                     </Button>
                                     <Button 
                                         onClick={handleCancel} 
-                                        className="ml-2" 
+                                        className="order-1 sm:order-2" 
                                         variant="outline"
+                                        size="sm"
                                         disabled={isConfirming}
                                     >
                                         Cancel
@@ -255,12 +281,12 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                         ) : (
                             // Amount input step
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-500 mb-1">
+                                <span className="text-xs text-gray-500 mb-2">
                                     {`1 ${selectedOption === 'A' ? market.optionA : market.optionB} = 1 PREDICT`}
                                 </span>
-                                <div className="flex flex-col gap-1 mb-4">
-                                    <div className="flex items-center gap-2 overflow-visible">
-                                        <div className="flex-grow relative">
+                                <div className="flex flex-col gap-2 mb-4">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                                        <div className="flex-grow">
                                             <Input
                                                 type="number"
                                                 min="0"
@@ -278,28 +304,28 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                                     }
                                                 }}
                                                 className={cn(
-                                                    "w-full",
+                                                    "w-full text-sm sm:text-base",
                                                     error && "border-red-500 focus-visible:ring-red-500"
                                                 )}
                                             />
                                         </div>
-                                        <span className="font-bold whitespace-nowrap">
+                                        <span className="font-bold text-sm whitespace-nowrap text-center sm:text-left">
                                             {selectedOption === 'A' ? market.optionA : market.optionB}
                                         </span>
                                     </div>
                                     <div className="min-h-[20px]">
                                         {error && (
-                                            <span className="text-sm text-red-500">
+                                            <span className="text-xs sm:text-sm text-red-500">
                                                 {error}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex justify-between gap-4">
-                                    <Button onClick={checkApproval} className="flex-1">
+                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                    <Button onClick={checkApproval} className="flex-1 order-2 sm:order-1" size="sm">
                                         Confirm
                                     </Button>
-                                    <Button onClick={handleCancel} variant="outline" className="flex-1">
+                                    <Button onClick={handleCancel} variant="outline" className="flex-1 order-1 sm:order-2" size="sm">
                                         Cancel
                                     </Button>
                                 </div>
