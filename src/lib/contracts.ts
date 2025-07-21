@@ -91,6 +91,15 @@ export const PREDICTION_MARKET_ABI = [
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {"name": "", "type": "address", "internalType": "address"}
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "MarketCreated",
     "inputs": [

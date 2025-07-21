@@ -2,6 +2,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState, useRef, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 import { parseEther, formatEther } from "viem";
 import { PREDICTION_MARKET_ADDRESS, PREDICT_TOKEN_ADDRESS } from "@/lib/wagmi";
 import { PREDICTION_MARKET_ABI, ERC20_ABI } from "@/lib/contracts";
@@ -26,8 +27,9 @@ type Option = 'A' | 'B' | null;
 export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps) {
     // Blockchain interactions
     const { address: account } = useAccount();
-    const { writeContract } = useWriteContract();
-    const { toast } = useToast()
+    const { writeContract, data: hash, error: writeError, isPending: isWritePending } = useWriteContract();
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     // UI state management
     const [isBuying, setIsBuying] = useState(false);
@@ -44,6 +46,64 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
 
     // Add to state variables
     const [error, setError] = useState<string | null>(null);
+    const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(null);
+
+    // Transaction receipt monitoring
+    const { data: receipt, isLoading: isWaitingForReceipt, error: receiptError } = useWaitForTransactionReceipt({
+        hash: (hash || lastTransactionHash) as `0x${string}`,
+        query: {
+            enabled: !!(hash || lastTransactionHash) && !!account,
+        },
+    });
+
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (receipt && receipt.status === 'success') {
+            // Transaction was successful
+            toast({
+                title: "Transaction Successful! 🎉",
+                description: `Your purchase has been confirmed. Hash: ${receipt.transactionHash.slice(0, 10)}...`,
+                duration: 5000,
+            });
+            
+            // Refresh all related queries
+            queryClient.invalidateQueries({ queryKey: ['readContract'] });
+            
+            // Reset transaction state
+            setLastTransactionHash(null);
+            handleCancel();
+        } else if (receipt && receipt.status === 'reverted') {
+            // Transaction failed
+            toast({
+                title: "Transaction Failed ❌",
+                description: "Your transaction was reverted. Please try again.",
+                variant: "destructive",
+                duration: 5000,
+            });
+            setLastTransactionHash(null);
+        } else if (receiptError) {
+            // Error getting receipt
+            toast({
+                title: "Transaction Error ❌", 
+                description: receiptError.message || "There was an error processing your transaction",
+                variant: "destructive",
+                duration: 5000,
+            });
+            setLastTransactionHash(null);
+        }
+    }, [receipt, receiptError, toast, queryClient]);
+
+    // Handle write errors
+    useEffect(() => {
+        if (writeError) {
+            toast({
+                title: "Transaction Failed ❌",
+                description: writeError.message || "Failed to submit transaction",
+                variant: "destructive",
+                duration: 5000,
+            });
+        }
+    }, [writeError, toast]);
 
     // Update container height when content changes
     useEffect(() => {
@@ -52,7 +112,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                 setContainerHeight(`${contentRef.current?.offsetHeight || 0}px`);
             }, 0);
         }
-    }, [isBuying, buyingStep, isVisible, error]);
+    }, [isBuying, buyingStep, isVisible, error, isWaitingForReceipt]);
 
     // Handlers for user interactions
     const handleBuy = (option: 'A' | 'B') => {
@@ -81,7 +141,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
         address: PREDICT_TOKEN_ADDRESS,
         abi: ERC20_ABI,
         functionName: "allowance",
-        args: [account as `0x${string}`, PREDICTION_MARKET_ADDRESS],
+        args: account ? [account as `0x${string}`, PREDICTION_MARKET_ADDRESS] : undefined,
         query: {
             enabled: !!account,
         },
@@ -105,6 +165,11 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
 
     // Handle token approval transaction
     const handleSetApproval = async () => {
+        if (!account) {
+            setError("Please connect your wallet first");
+            return;
+        }
+        
         setIsApproving(true);
         setError(null);
         try {
@@ -116,8 +181,8 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
             });
             
             toast({
-                title: "Approval Submitted",
-                description: "Please confirm the transaction in your wallet",
+                title: "Approval Submitted ⏳",
+                description: "Please confirm the transaction in your wallet...",
                 duration: 3000,
             });
             
@@ -125,11 +190,6 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
         } catch (error: any) {
             console.error(error);
             setError(error?.message || "Approval failed");
-            toast({
-                title: "Approval Failed",
-                description: error?.message || "There was an error with the approval",
-                variant: "destructive",
-            });
         } finally {
             setIsApproving(false);
         }
@@ -137,6 +197,11 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
 
     // Handle share purchase transaction
     const handleConfirm = async () => {
+        if (!account) {
+            setError("Please connect your wallet first");
+            return;
+        }
+        
         if (!selectedOption || amount <= 0) {
             setError("Must select an option and enter an amount greater than 0");
             return;
@@ -153,20 +218,14 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
             });
             
             toast({
-                title: "Purchase Submitted",
-                description: "Please confirm the transaction in your wallet",
+                title: "Purchase Submitted ⏳",
+                description: "Please confirm the transaction in your wallet...",
                 duration: 3000,
             });
             
-            handleCancel();
         } catch (error: any) {
             console.error(error);
             setError(error?.message || "Purchase failed");
-            toast({
-                title: "Purchase Failed",
-                description: error?.message || "There was an error processing your purchase",
-                variant: "destructive",
-            });
         } finally {
             setIsConfirming(false);
         }
@@ -218,12 +277,12 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                         onClick={handleSetApproval} 
                                         className="order-2 sm:order-1"
                                         size="sm"
-                                        disabled={isApproving}
+                                        disabled={isApproving || isWaitingForReceipt}
                                     >
-                                        {isApproving ? (
+                                        {(isApproving || isWaitingForReceipt) ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                <span className="hidden xs:inline">Approving...</span>
+                                                <span className="hidden xs:inline">{isWaitingForReceipt ? 'Confirming...' : 'Approving...'}</span>
                                                 <span className="xs:hidden">...</span>
                                             </>
                                         ) : (
@@ -235,7 +294,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                         className="order-1 sm:order-2" 
                                         variant="outline"
                                         size="sm"
-                                        disabled={isApproving}
+                                        disabled={isApproving || isWaitingForReceipt}
                                     >
                                         Cancel
                                     </Button>
@@ -255,12 +314,12 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                         onClick={handleConfirm} 
                                         className="order-2 sm:order-1"
                                         size="sm"
-                                        disabled={isConfirming}
+                                        disabled={isConfirming || isWaitingForReceipt}
                                     >
-                                        {isConfirming ? (
+                                        {(isConfirming || isWaitingForReceipt) ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                <span className="hidden xs:inline">Confirming...</span>
+                                                <span className="hidden xs:inline">{isWaitingForReceipt ? 'Processing...' : 'Confirming...'}</span>
                                                 <span className="xs:hidden">...</span>
                                             </>
                                         ) : (
@@ -272,7 +331,7 @@ export function MarketBuyInterface({ marketId, market }: MarketBuyInterfaceProps
                                         className="order-1 sm:order-2" 
                                         variant="outline"
                                         size="sm"
-                                        disabled={isConfirming}
+                                        disabled={isConfirming || isWaitingForReceipt}
                                     >
                                         Cancel
                                     </Button>

@@ -1,8 +1,9 @@
 import { Button } from "./ui/button";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 import { PREDICTION_MARKET_ADDRESS } from "@/lib/wagmi";
 import { PREDICTION_MARKET_ABI } from "@/lib/contracts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -20,11 +21,59 @@ export function MarketResolved({
     optionB
 }: MarketResolvedProps) {
     const [isClaiming, setIsClaiming] = useState(false);
-    const { writeContract, data: hash } = useWriteContract();
-    const { isLoading: isConfirming } = useWaitForTransactionReceipt({ 
-        hash 
+    const { writeContract, data: hash, error: writeError } = useWriteContract();
+    const { data: receipt, isLoading: isConfirming, error: receiptError } = useWaitForTransactionReceipt({ 
+        hash,
+        query: {
+            enabled: !!hash,
+        },
     });
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (receipt && receipt.status === 'success') {
+            toast({
+                title: "Rewards Claimed Successfully! 🎉",
+                description: `Your rewards have been sent to your wallet. Hash: ${receipt.transactionHash.slice(0, 10)}...`,
+                duration: 5000,
+            });
+            
+            // Refresh data
+            queryClient.invalidateQueries({ queryKey: ['readContract'] });
+            setIsClaiming(false);
+        } else if (receipt && receipt.status === 'reverted') {
+            toast({
+                title: "Transaction Failed ❌",
+                description: "Rewards claim was reverted. You may not have rewards to claim.",
+                variant: "destructive",
+                duration: 5000,
+            });
+            setIsClaiming(false);
+        } else if (receiptError) {
+            toast({
+                title: "Transaction Error ❌",
+                description: receiptError.message || "Error processing rewards claim",
+                variant: "destructive",
+                duration: 5000,
+            });
+            setIsClaiming(false);
+        }
+    }, [receipt, receiptError, toast, queryClient]);
+
+    // Handle write errors
+    useEffect(() => {
+        if (writeError) {
+            toast({
+                title: "Claim Failed ❌",
+                description: writeError.message || "Failed to submit rewards claim",
+                variant: "destructive",
+                duration: 5000,
+            });
+            setIsClaiming(false);
+        }
+    }, [writeError, toast]);
 
     const handleClaimRewards = async () => {
         setIsClaiming(true);
@@ -37,18 +86,12 @@ export function MarketResolved({
             });
             
             toast({
-                title: "Claiming Rewards!",
-                description: "Your transaction has been submitted",
-                duration: 5000,
+                title: "Claim Submitted ⏳",
+                description: "Please confirm the transaction in your wallet...",
+                duration: 3000,
             });
         } catch (error) {
             console.error(error);
-            toast({
-                title: "Claim Failed",
-                description: "There was an error claiming your rewards",
-                variant: "destructive",
-            });
-        } finally {
             setIsClaiming(false);
         }
     };
@@ -67,7 +110,7 @@ export function MarketResolved({
                 {isClaiming || isConfirming ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {isConfirming ? "Confirming..." : "Claiming..."}
+                        {isConfirming ? "Processing..." : "Claiming..."}
                     </>
                 ) : (
                     "Claim Rewards"

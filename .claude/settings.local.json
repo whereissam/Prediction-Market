@@ -19,7 +19,8 @@
       "Bash(cast tx:*)",
       "Bash(cast code:*)",
       "Bash(cast balance:*)",
-      "Bash(cast send:*)"
+      "Bash(cast send:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

@@ -10,7 +10,7 @@ export function TokenBalance() {
     address: PREDICT_TOKEN_ADDRESS,
     abi: ERC20_ABI,
     functionName: "balanceOf",
-    args: [account as `0x${string}`],
+    args: account ? [account as `0x${string}`] : undefined,
     query: {
       enabled: !!account,
     },

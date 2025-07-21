@@ -9,6 +9,8 @@ import { MarketResolved } from "./market-resolved";
 import { MarketPending } from "./market-pending";
 import { MarketBuyInterface } from "./market-buy-interface";
 import { MarketSharesDisplay } from "./market-shares-display";
+import { MarketOwnerResolve } from "./market-owner-resolve";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // Props for the MarketCard component
 // index is the market id
@@ -39,6 +41,9 @@ interface SharesBalance {
 export function MarketCard({ index, filter }: MarketCardProps) {
     // Get the active account
     const { address: account } = useAccount();
+    
+    // Check if current user is contract owner
+    const { isOwner } = useIsOwner();
 
     // Get the market data
     const { data: marketData, isLoading: isLoadingMarketData } = useReadContract({
@@ -65,7 +70,7 @@ export function MarketCard({ index, filter }: MarketCardProps) {
         address: PREDICTION_MARKET_ADDRESS,
         abi: PREDICTION_MARKET_ABI,
         functionName: "getSharesBalance",
-        args: [BigInt(index), account as `0x${string}`],
+        args: account ? [BigInt(index), account as `0x${string}`] : undefined,
         query: {
             enabled: !!account,
         },
@@ -131,7 +136,15 @@ export function MarketCard({ index, filter }: MarketCardProps) {
                                     optionB={market.optionB}
                                 />
                             ) : (
-                                <MarketPending />
+                                <>
+                                    {isOwner && market && (
+                                        <MarketOwnerResolve
+                                            marketId={index}
+                                            market={market}
+                                        />
+                                    )}
+                                    <MarketPending />
+                                </>
                             )
                         ) : (
                             <MarketBuyInterface 
