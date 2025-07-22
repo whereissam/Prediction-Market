@@ -40,7 +40,7 @@ export function EnhancedPredictionMarketDashboard() {
           />
           <div className="absolute inset-0 bg-black/30 dark:bg-black/50 rounded-lg flex items-center justify-center p-4">
             <div className="text-center">
-              <h1 className="text-primary-foreground text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
+              <h1 className="text-primary-foreground text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2" style={{fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-tight)'}}>
                 Prediction Market
               </h1>
               <p className="text-primary-foreground/90 text-sm sm:text-base md:text-lg font-medium hidden sm:block">
@@ -53,7 +53,7 @@ export function EnhancedPredictionMarketDashboard() {
         <TokenBalance />
         <Tabs defaultValue="active" className="w-full">
           <div className="flex justify-center mb-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-muted/30 p-1">
+            <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-muted/30 p-1" style={{boxShadow: 'var(--shadow-sm)', fontFamily: 'var(--font-sans)', letterSpacing: 'var(--tracking-normal)'}}>
               <TabsTrigger value="active" className="text-sm font-semibold px-4 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-lg transition-all duration-200">
                 <span className="hidden sm:inline">Active Markets</span>
                 <span className="sm:hidden">Active</span>

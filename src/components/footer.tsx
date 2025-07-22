@@ -3,9 +3,9 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t bg-background mt-8">
+    <footer className="w-full border-t bg-background mt-8" style={{boxShadow: 'var(--shadow-xs)', fontFamily: 'var(--font-sans)'}}>
       <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex flex-col items-center justify-center gap-3 py-6 sm:py-8 md:h-24 md:flex-row md:justify-between md:gap-4">
+        <div className="flex flex-col items-center justify-center gap-3 py-6 sm:py-8 md:h-24 md:flex-row md:justify-between md:gap-4" style={{letterSpacing: 'var(--tracking-normal)'}}>
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
             <p className="text-center text-xs sm:text-sm leading-relaxed text-muted-foreground">
               Built with ❤️ by{" "}

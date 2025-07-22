@@ -9,7 +9,7 @@ export function OwnerInfo() {
     }
 
     return (
-        <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-500/20 text-orange-800 dark:text-orange-400 px-2 py-1 rounded-md text-xs font-medium border border-orange-200 dark:border-orange-500/50">
+        <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/20" style={{fontFamily: 'var(--font-sans)', letterSpacing: 'var(--tracking-normal)', boxShadow: 'var(--shadow-xs)'}}>
             <Crown className="w-3 h-3" />
             <span className="hidden xs:inline">Contract Owner</span>
             <span className="xs:hidden">Owner</span>

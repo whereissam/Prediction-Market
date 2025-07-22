@@ -39,9 +39,9 @@ export function DebugInfo() {
   });
 
   return (
-    <div className="bg-muted/50 p-4 rounded-lg text-sm mb-4 border">
-      <h3 className="font-bold mb-2 text-foreground">Debug Info:</h3>
-      <div className="text-muted-foreground space-y-1">
+    <div className="bg-muted/50 p-4 rounded-lg text-sm mb-4 border" style={{boxShadow: 'var(--shadow-xs)', fontFamily: 'var(--font-mono)'}}>
+      <h3 className="font-bold mb-2 text-foreground" style={{fontFamily: 'var(--font-sans)', letterSpacing: 'var(--tracking-normal)'}}>Debug Info:</h3>
+      <div className="text-muted-foreground space-y-1" style={{letterSpacing: 'var(--tracking-normal)'}}>
         <div>Connected: <span className="text-foreground">{isConnected ? 'Yes' : 'No'}</span></div>
         <div>Address: <span className="text-foreground font-mono text-xs">{address || 'None'}</span></div>
         <div>Chain: <span className="text-foreground">{chain?.name || 'None'} (ID: {chain?.id})</span></div>

@@ -9,9 +9,13 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200",
       className
     )}
+    style={{
+      boxShadow: 'var(--shadow-sm)',
+      ...props.style
+    }}
     {...props}
   />
 ))
@@ -39,6 +43,11 @@ const CardTitle = React.forwardRef<
       "text-2xl font-semibold leading-none tracking-tight",
       className
     )}
+    style={{
+      fontFamily: 'var(--font-serif)',
+      letterSpacing: 'var(--tracking-tight)',
+      ...props.style
+    }}
     {...props}
   />
 ))

@@ -109,14 +109,14 @@ export function MarketCard({ index, filter }: MarketCardProps) {
     }
 
     return (
-        <Card key={index} className="flex flex-col h-full hover:shadow-md transition-shadow duration-200">
+        <Card key={index} className="flex flex-col h-full hover:shadow-lg transition-all duration-200" style={{boxShadow: 'var(--shadow-sm)'}}>
             {isLoadingMarketData ? (
                 <MarketCardSkeleton />
             ) : (
                 <>
                     <CardHeader className="pb-3">
                         {market && <MarketTime endTime={market.endTime} />}
-                        <CardTitle className="text-base sm:text-lg leading-tight min-h-[2.5rem] flex items-center">
+                        <CardTitle className="text-base sm:text-lg leading-tight min-h-[2.5rem] flex items-center" style={{fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-normal)'}}>
                             {market?.question}
                         </CardTitle>
                     </CardHeader>
